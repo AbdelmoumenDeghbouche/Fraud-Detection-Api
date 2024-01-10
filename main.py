@@ -1,4 +1,5 @@
 import pandas as pd
+import uvicorn
 from fastapi import FastAPI, Request,HTTPException
 from pydantic import BaseModel
 from datetime import datetime
@@ -12,11 +13,9 @@ import httpx
 load_dotenv()
 
 app = FastAPI()
-if __name__ == "__main__":
-    import uvicorn
 
-    uvicorn.run(app, host="localhost", port=8000)
-    origins = [
+
+origins = [
     "http://localhost:3000",  
 ]
 app.add_middleware(
@@ -24,7 +23,7 @@ app.add_middleware(
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],  
-    allow_headers=["*"],  
+    allow_headers=["*"],  # You can restrict to specific headers if needed
 )
 # Load rules from the CSV file using pandas
 rules = pd.read_csv('rules_simple.csv')
@@ -103,6 +102,8 @@ async def detect(transaction: Transaction,location: dict = Depends(get_user_loca
     transactionNormalized=normalizeInput(transaction)
     for _, rule in rules.iterrows():
         if all(pd.isna(v) or transactionNormalized[k] == v for k, v in rule.items()):
-            return {"result": "🚨 Fraud Alert! 🚨 Whoa there, Sherlock! We just caught a sneaky attempt at mischief.🕵️‍♂️💼"+location}
+            return {"result": "🚨 Fraud Alert! 🚨 Whoa there, Sherlock! We just caught a sneaky attempt at mischief.🕵️‍♂️💼"}
+            # return location
 
     return {"result": "🌟 Your transactions are as clean as a whistle.🎩💸"}
+uvicorn.run(app)
